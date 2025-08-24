@@ -14,3 +14,5 @@ netsh advfirewall reset
 
 New-NetFirewallRule -DisplayName "Allow RDP 3389" -Direction Inbound -Protocol TCP -LocalPort 3389 -Action Allow
 New-NetFirewallRule -DisplayName "Allow RDP 3389 UDP" -Direction Inbound -Protocol UDP -LocalPort 3389 -Action Allow
+
+Get-NetFirewallRule | findstr RDP
