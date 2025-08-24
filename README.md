@@ -53,6 +53,6 @@ go build -o p2p-node .
 
 ```bash
 cd relay
-go build -o p2p-relay .␊
-./p2p-relay␊
+go build -o p2p-relay .
+./p2p-relay
 ```
