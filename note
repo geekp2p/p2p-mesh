@@ -57,3 +57,7 @@ set ENABLE_HOLEPUNCH=true
 set ENABLE_UPNP=true
 set RELAY_ADDR=/ip4/<PUBLIC_IP_OR_DNS>/tcp/4003/p2p/<RELAY_PEER_ID>
 .\p2p-node
+
+
+dism /Online /Enable-Feature /FeatureName:Microsoft-Hyper-V /All /NoRestart
+Set-VMProcessor -VMName <ชื่อ VM> -ExposeVirtualizationExtensions $true
