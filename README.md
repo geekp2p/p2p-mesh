@@ -1,7 +1,7 @@
 # p2p-mesh
 
-A peer-to-peer mesh networking project written in Go and containerized with Docker.  
-Each node runs independently with a persistent unique PeerID and can discover peers automatically on LAN or over the internet.  
+A peer-to-peer mesh networking project written in Go and containerized with Docker.
+Each node runs independently with a persistent unique PeerID and can discover peers automatically on LAN or over the internet.
 The system is serverless by design, with optional relay support for guaranteed connectivity behind restrictive NATs.
 
 ## ✨ Features
@@ -20,3 +20,22 @@ Clone and run two local nodes in Docker:
 git clone https://github.com/geekp2p/p2p-mesh.git
 cd p2p-mesh
 docker compose up --build
+```
+
+## 🛠 Manual Build
+
+### Node
+
+```bash
+cd node
+go build -o p2p-node .
+./p2p-node
+```
+
+### Relay
+
+```bash
+cd relay
+go build -o p2p-relay .
+./p2p-relay
+```

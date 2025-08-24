@@ -22,10 +22,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/host/autonat"
-	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoreds"
+        pstoremem "github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
-	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+        clientv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/client"
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	tcp "github.com/libp2p/go-libp2p/p2p/transport/tcp"
 
@@ -52,10 +52,6 @@ func loadOrCreateKey() (crypto.PrivKey, error) {
 
 type mdnsNotifee struct{ h host.Host }
 
-func (n *mdnsNotifee) HandlePeerFound(pi peer.AddrInfo) {
-	_ = n.h.Connect(context.Background(), pi)
-}
-
 func getenvBool(k string, def bool) bool {
 	v := strings.TrimSpace(strings.ToLower(os.Getenv(k)))
 	if v == "" {
@@ -80,24 +76,25 @@ func main() {
 	enableHP := getenvBool("ENABLE_HOLEPUNCH", true)
 	enableUPnP := getenvBool("ENABLE_UPNP", true)
 
-	// key & peerstore
-	priv, err := loadOrCreateKey()
-	must(err)
-	ps, err := pstoreds.NewPeerstore(ctx, "", nil)
-	must(err)
-	defer ps.Close()
+        // key & in-memory peerstore
+        priv, err := loadOrCreateKey()
+        must(err)
+        ps, err := pstoremem.NewPeerstore()
+        must(err)
+        defer ps.Close()
 
 	// resource manager (safe defaults)
 	rmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(rcmgr.DefaultLimits.AutoScale()))
 	must(err)
 
 	// host options
-	opts := []libp2p.Option{
-		libp2p.Identity(priv),
-		libp2p.ResourceManager(rmgr),
-		libp2p.Muxer(yamux.DefaultID, yamux.DefaultTransport),
-		libp2p.Transport(tcp.NewTCPTransport),
-	}
+        opts := []libp2p.Option{
+                libp2p.Identity(priv),
+                libp2p.Peerstore(ps),
+                libp2p.ResourceManager(rmgr),
+        libp2p.Muxer(yamux.ID, yamux.DefaultTransport),
+                libp2p.Transport(tcp.NewTCPTransport),
+        }
 	if listenTCP != "" {
 		opts = append(opts, libp2p.ListenAddrStrings(listenTCP))
 	}
@@ -124,12 +121,11 @@ func main() {
 	}
 
 	// AutoNAT (help NAT type detection)
-	_, _ = autonat.New(ctx, h, autonat.EnableService(false))
+        _, _ = autonat.New(h)
 
 	// mDNS for LAN
-	ser, err := mdns.NewMdnsService(h, room, &mdnsNotifee{h: h})
-	must(err)
-	defer ser.Close()
+        ser := mdns.NewMdnsService(h, room, &mdnsNotifee{h: h})
+        defer ser.Close()
 
 	// If relay provided, connect to it; that gives us a control path for DCUtR
 	if relayAddr != "" {
@@ -155,27 +151,7 @@ func main() {
 	})
 
 	// publisher
-	go func() {
-		tkr := time.NewTicker(5 * time.Second)
-		defer tkr.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-tkr.C:
-				msg := fmt.Sprintf("hello from %s @ %s", short(h.ID()), time.Now().Format(time.RFC3339))
-				_ = topic.Publish(ctx, []byte(msg))
-			}
-		}
-	}()
 
-	// subscriber
-	go func() {
-		for {
-			msg, err := sub.Next(ctx)
-			if err != nil {
-				return
-			}
 			if msg.ReceivedFrom != h.ID() {
 				fmt.Printf("[pubsub] %s: %s\n", short(msg.ReceivedFrom), string(msg.Data))
 			}
@@ -201,9 +177,9 @@ func connectToRelay(ctx context.Context, h host.Host, relay string) error {
 	if err := h.Connect(ctx, *pi); err != nil {
 		return err
 	}
-	// Reserve slot (optional; ensures we can use relay/circuit)
-	_, err = relayv2.Reserve(ctx, h, *pi)
-	return err
+        // Reserve slot (optional; ensures we can use relay/circuit)
+        _, err = clientv2.Reserve(ctx, h, *pi)
+        return err
 }
 
 func must(err error) {

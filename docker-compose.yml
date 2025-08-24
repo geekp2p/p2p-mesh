@@ -40,13 +40,13 @@ services:
     container_name: p2p-node-2
     restart: unless-stopped
     environment:
-      - APP_ROOM=my-room
-      - RELAY_ADDR=/ip4/<YOUR_PUBLIC_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
-      - LISTEN_TCP=/ip4/0.0.0.0/tcp/4002
-      - LISTEN_QUIC=/ip4/0.0.0.0/udp/4002/quic-v1
-      - ENABLE_RELAY_CLIENT=true
-      - ENABLE_HOLEPUNCH=true
-      - ENABLE_UPNP=true
+      - APP_ROOM=${APP_ROOM}
+      - RELAY_ADDR=/ip4/<PUBLIC_IP_OR_DNS>/tcp/4003/p2p/<RELAY_PEER_ID>
+      - LISTEN_TCP=/ip4/0.0.0.0/tcp/4001
+      - LISTEN_QUIC=/ip4/0.0.0.0/udp/4001/quic-v1
+      - ENABLE_RELAY_CLIENT=${ENABLE_RELAY_CLIENT}
+      - ENABLE_HOLEPUNCH=${ENABLE_HOLEPUNCH}
+      - ENABLE_UPNP=${ENABLE_UPNP}
     ports:
       - "4002:4002/tcp"
       - "4002:4002/udp"
