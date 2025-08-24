@@ -3,7 +3,7 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /bin/p2p-node ./main.go
+RUN CGO_ENABLED=0 go build -o /bin/p2p-node .
 
 FROM alpine:3.20
 WORKDIR /app
