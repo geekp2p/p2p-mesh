@@ -34,6 +34,11 @@ export RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
 docker compose up --build
 ```
 
+The chat web UI for each node will be available at:
+
+- http://localhost:3001 for `node1`
+- http://localhost:3002 for `node2`
+
 ## 🛠 Manual Build
 
 ### Node

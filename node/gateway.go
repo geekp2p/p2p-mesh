@@ -148,7 +148,7 @@ func (g *Gateway) broadcast(cm ChatMsg) {
 func RunWebGateway(ctx context.Context, h host.Host, ps *pubsub.PubSub, room string) {
 	webAddr := os.Getenv("WEB_ADDR")
 	if webAddr == "" {
-		webAddr = ":8080"
+		webAddr = ":3000"
 	}
 	nick := os.Getenv("NODE_NICK")
 	if nick == "" {
