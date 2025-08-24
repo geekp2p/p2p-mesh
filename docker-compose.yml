@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
     environment:
       - APP_ROOM=${APP_ROOM}
-      - RELAY_ADDR=/ip4/<PUBLIC_IP_OR_DNS>/tcp/4003/p2p/<RELAY_PEER_ID>
+      - RELAY_ADDR=/ip4/<PUBLIC_IP_OR_DNS>/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj
       - LISTEN_TCP=/ip4/0.0.0.0/tcp/4001
       - LISTEN_QUIC=/ip4/0.0.0.0/udp/4001/quic-v1
       - ENABLE_RELAY_CLIENT=${ENABLE_RELAY_CLIENT}
