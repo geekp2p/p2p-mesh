@@ -158,6 +158,8 @@ func main() {
 	sub, err := topic.Subscribe()
 	must(err)
 
+	RunWebGateway(ctx, h, psub, "room:"+room)
+
 	// simple handler: print any direct stream
 	h.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
 		defer s.Close()
