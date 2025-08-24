@@ -30,13 +30,15 @@ services:
       - "4001:4001/tcp"
       - "4001:4001/udp"
       - "3001:3000/tcp"
-    # เพิ่ม sysctls เพื่อขยาย UDP/TCP buffer ใน network namespace ของ container
-    sysctls:
-      net.core.rmem_max: 8388608     # 8 MiB
-      net.core.rmem_default: 8388608
-      net.core.wmem_max: 8388608
-      net.core.wmem_default: 8388608
-    # ไม่จำเป็นต้องใช้ NET_ADMIN สำหรับ sysctls ชุดนี้ แต่ถ้าบางระบบต้องการค่อยเปิด
+    # sysctls removed for compatibility with hosts that do not expose
+    # /proc/sys/net/core/* entries (e.g. WSL1 or non-Linux kernels). The
+    # containers will fall back to default UDP/TCP buffer sizes.
+    # sysctls:
+    #   net.core.rmem_max: 8388608     # 8 MiB
+    #   net.core.rmem_default: 8388608
+    #   net.core.wmem_max: 8388608
+    #   net.core.wmem_default: 8388608
+    # หากต้องการเพิ่ม buffer ในอนาคตอาจต้องเปิด cap_add NET_ADMIN
     # cap_add:
     #   - NET_ADMIN
     volumes:
@@ -61,11 +63,13 @@ services:
       - "4002:4001/tcp"
       - "4002:4001/udp"
       - "3002:3000/tcp"
-    sysctls:
-      net.core.rmem_max: 8388608
-      net.core.rmem_default: 8388608
-      net.core.wmem_max: 8388608
-      net.core.wmem_default: 8388608
+    # sysctls removed for compatibility with hosts that do not expose
+    # /proc/sys/net/core/* entries. Containers will use default buffer sizes.
+    # sysctls:
+    #   net.core.rmem_max: 8388608
+    #   net.core.rmem_default: 8388608
+    #   net.core.wmem_max: 8388608
+    #   net.core.wmem_default: 8388608
     # cap_add:
     #   - NET_ADMIN
     volumes:
