@@ -1,14 +1,11 @@
-version: "3.9"
-
 services:
   relay:
     build: ./relay
     container_name: p2p-relay
     restart: unless-stopped
-    # ต้องอยู่บนเครื่องที่เปิดพอร์ตสาธารณะได้ เพื่อความชัวร์
     ports:
       - "4003:4003/tcp"
-      - "4003:4003/udp"   # เผื่ออนาคตใช้ QUIC ผ่านรีเลย์
+      - "4003:4003/udp"
     environment:
       - RELAY_LISTEN=/ip4/0.0.0.0/tcp/4003
       - RELAY_PRIVATE=false
@@ -20,13 +17,13 @@ services:
     container_name: p2p-node-1
     restart: unless-stopped
     environment:
-      - APP_ROOM=my-room            # ชื่อห้อง/กลุ่ม (rendezvous string)
-      - RELAY_ADDR=/ip4/<YOUR_PUBLIC_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
+      - APP_ROOM=${APP_ROOM}
+      - RELAY_ADDR=${RELAY_ADDR}
       - LISTEN_TCP=/ip4/0.0.0.0/tcp/4001
       - LISTEN_QUIC=/ip4/0.0.0.0/udp/4001/quic-v1
-      - ENABLE_RELAY_CLIENT=true
-      - ENABLE_HOLEPUNCH=true
-      - ENABLE_UPNP=true
+      - ENABLE_RELAY_CLIENT=${ENABLE_RELAY_CLIENT}
+      - ENABLE_HOLEPUNCH=${ENABLE_HOLEPUNCH}
+      - ENABLE_UPNP=${ENABLE_UPNP}
     ports:
       - "4001:4001/tcp"
       - "4001:4001/udp"
@@ -41,15 +38,15 @@ services:
     restart: unless-stopped
     environment:
       - APP_ROOM=${APP_ROOM}
-      - RELAY_ADDR=/ip4/<PUBLIC_IP_OR_DNS>/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj
+      - RELAY_ADDR=${RELAY_ADDR}
       - LISTEN_TCP=/ip4/0.0.0.0/tcp/4001
       - LISTEN_QUIC=/ip4/0.0.0.0/udp/4001/quic-v1
       - ENABLE_RELAY_CLIENT=${ENABLE_RELAY_CLIENT}
       - ENABLE_HOLEPUNCH=${ENABLE_HOLEPUNCH}
       - ENABLE_UPNP=${ENABLE_UPNP}
     ports:
-      - "4002:4002/tcp"
-      - "4002:4002/udp"
+      - "4002:4001/tcp"
+      - "4002:4001/udp"
     volumes:
       - node2-data:/data
     depends_on:
