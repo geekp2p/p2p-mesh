@@ -138,7 +138,10 @@ func main() {
 
 	// If relay provided, connect to it; that gives us a control path for DCUtR
 	if relayAddr != "" {
-		if err := connectToRelay(ctx, h, relayAddr); err != nil {
+		maddr, err := ma.NewMultiaddr(relayAddr)
+		if err != nil {
+			fmt.Println("Invalid RELAY_ADDR, skipping:", err)
+		} else if err := connectToRelay(ctx, h, maddr); err != nil {
 			fmt.Println("Relay connect failed:", err)
 		} else {
 			fmt.Println("Relay connected.")
@@ -192,11 +195,7 @@ func main() {
 	<-sig
 }
 
-func connectToRelay(ctx context.Context, h host.Host, relay string) error {
-	maddr, err := ma.NewMultiaddr(relay)
-	if err != nil {
-		return err
-	}
+func connectToRelay(ctx context.Context, h host.Host, maddr ma.Multiaddr) error {
 	pi, err := peer.AddrInfoFromP2pAddr(maddr)
 	if err != nil {
 		return err
