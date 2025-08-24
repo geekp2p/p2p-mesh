@@ -22,6 +22,18 @@ cd p2p-mesh
 docker compose up --build
 ```
 
+## 🔌 Enabling Relay Client
+
+Enable the relay client if your nodes must dial through a public relay server. Set the
+`ENABLE_RELAY_CLIENT` flag and provide the relay's multiaddress before starting the
+containers:
+
+```bash
+export ENABLE_RELAY_CLIENT=true
+export RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
+docker compose up --build
+```
+
 ## 🛠 Manual Build
 
 ### Node
@@ -36,6 +48,6 @@ go build -o p2p-node .
 
 ```bash
 cd relay
-go build -o p2p-relay .
-./p2p-relay
+go build -o p2p-relay .␊
+./p2p-relay␊
 ```

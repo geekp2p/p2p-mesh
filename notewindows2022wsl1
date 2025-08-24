@@ -1,3 +1,4 @@
+sudo dockerd
 
 
 dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all
@@ -15,3 +16,9 @@ sudo usermod -aG docker $USER
 sudo dockerd
 
 docker run hello-world
+
+sudo pkill dockerd || true
+
+sudo apt-get update && sudo apt-get install -y golang-go git && cd /mnt/c/Users/Administrator/p2p-mesh && go mod download
+
+find . -maxdepth 3 -type f -name main.go -printf "%P\n"
