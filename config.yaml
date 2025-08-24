@@ -1,0 +1,6 @@
+app_room: my-room
+relay_listen: /ip4/0.0.0.0/tcp/4003
+relay_addr: /ip4/103.13.31.47/tcp/4003/p2p/12D3KooWGYB7x9aHqyABx74KrTuKXptJZNvpYro5r2cWN9pDZ7Bi
+enable_relay_client: true
+enable_holepunch: true
+enable_upnp: true
