@@ -34,10 +34,14 @@ export RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
 docker compose up --build
 ```
 
-The chat web UI for each node will be available at:
+## 💬 Chat
+
+Open the chat web UI for each node in your browser:
 
 - http://localhost:3001 for `node1`
 - http://localhost:3002 for `node2`
+
+Enter a nickname when prompted and start chatting. Messages will be broadcast to all peers connected to the mesh.
 
 ## 🛠 Manual Build
 
