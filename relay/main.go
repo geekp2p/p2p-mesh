@@ -2,16 +2,37 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	libp2p "github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p/core/crypto"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 
 	"github.com/joho/godotenv"
 )
+
+const keyFile = "/data/relaykey.bin"
+
+func loadOrCreateKey() (crypto.PrivKey, error) {
+	_ = os.MkdirAll(filepath.Dir(keyFile), 0o755)
+	if b, err := os.ReadFile(keyFile); err == nil && len(b) == ed25519.PrivateKeySize {
+		return crypto.UnmarshalEd25519PrivateKey(b)
+	}
+	_, pk, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	if err := os.WriteFile(keyFile, []byte(pk), 0o600); err != nil {
+		return nil, err
+	}
+	return crypto.UnmarshalEd25519PrivateKey([]byte(pk))
+}
 
 func main() {
 	_ = godotenv.Load(".env")
@@ -26,8 +47,18 @@ func main() {
 		listen = "/ip4/0.0.0.0/tcp/4003"
 	}
 
+	// สร้างหรือโหลดคีย์ส่วนตัวเพื่อให้ PeerID คงที่
+	priv, err := loadOrCreateKey()
+	if err != nil {
+		panic(err)
+	}
+
 	// สร้าง host ที่ฟังที่ listen address
-	h, err := libp2p.New(libp2p.ListenAddrStrings(listen), libp2p.EnableRelay())
+	h, err := libp2p.New(
+		libp2p.Identity(priv),
+		libp2p.ListenAddrStrings(listen),
+		libp2p.EnableRelay(),
+	)
 	if err != nil {
 		panic(err)
 	}

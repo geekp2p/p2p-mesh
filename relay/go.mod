@@ -4,7 +4,11 @@ go 1.23.8
 
 toolchain go1.24.6
 
-require github.com/libp2p/go-libp2p v0.43.0
+require (
+	github.com/joho/godotenv v1.5.1
+	github.com/libp2p/go-libp2p v0.43.0
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/benbjohnson/clock v1.3.5 // indirect

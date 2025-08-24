@@ -5,9 +5,11 @@ go 1.23.8
 toolchain go1.24.6
 
 require (
+	github.com/joho/godotenv v1.5.1
 	github.com/libp2p/go-libp2p v0.43.0
 	github.com/libp2p/go-libp2p-pubsub v0.14.2
 	github.com/multiformats/go-multiaddr v0.16.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

@@ -5,7 +5,7 @@ Each node runs independently with a persistent unique PeerID and can discover pe
 The system is serverless by design, with optional relay support for guaranteed connectivity behind restrictive NATs.
 
 ## ✨ Features
-- ✅ Unique peer IDs (Ed25519, persisted in volume)
+- ✅ Unique peer IDs for nodes and relays (Ed25519, persisted in volume)
 - ✅ LAN discovery using mDNS
 - ✅ NAT traversal with AutoNAT, UPnP, NAT-PMP, and hole punching (DCUtR)
 - ✅ GossipSub pub/sub messaging between peers
