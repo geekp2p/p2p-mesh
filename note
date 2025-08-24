@@ -1,3 +1,14 @@
+cd Y:\emulator\p2p-mesh\relay
+go mod init p2p-mesh/relay
+go mod tidy
+
+
+cd Y:\emulator\p2p-mesh\node
+go mod init p2p-mesh/node
+go mod tidy
+
+
+
 docker compose build --no-cache
 
 docker compose down -v
