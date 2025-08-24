@@ -30,11 +30,19 @@ services:
       - "4001:4001/tcp"
       - "4001:4001/udp"
       - "3001:3000/tcp"
+    # เพิ่ม sysctls เพื่อขยาย UDP/TCP buffer ใน network namespace ของ container
+    sysctls:
+      net.core.rmem_max: 8388608     # 8 MiB
+      net.core.rmem_default: 8388608
+      net.core.wmem_max: 8388608
+      net.core.wmem_default: 8388608
+    # ไม่จำเป็นต้องใช้ NET_ADMIN สำหรับ sysctls ชุดนี้ แต่ถ้าบางระบบต้องการค่อยเปิด
+    # cap_add:
+    #   - NET_ADMIN
     volumes:
       - node1-data:/data
     depends_on:
       - relay
-
   node2:
     build: ./node
     container_name: p2p-node-2
@@ -53,6 +61,13 @@ services:
       - "4002:4001/tcp"
       - "4002:4001/udp"
       - "3002:3000/tcp"
+    sysctls:
+      net.core.rmem_max: 8388608
+      net.core.rmem_default: 8388608
+      net.core.wmem_max: 8388608
+      net.core.wmem_default: 8388608
+    # cap_add:
+    #   - NET_ADMIN
     volumes:
       - node2-data:/data
     depends_on:
