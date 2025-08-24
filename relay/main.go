@@ -9,11 +9,19 @@ import (
 
 	libp2p "github.com/libp2p/go-libp2p"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	// อ่าน config จาก ENV
+	_ = godotenv.Load(".env")
+	cfg := loadConfig()
+
+	// อ่าน config จาก ENV/ไฟล์
 	listen := os.Getenv("RELAY_LISTEN")
+	if listen == "" {
+		listen = cfg.RelayListen
+	}
 	if listen == "" {
 		listen = "/ip4/0.0.0.0/tcp/4003"
 	}

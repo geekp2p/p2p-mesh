@@ -32,6 +32,8 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	ma "github.com/multiformats/go-multiaddr"
+
+	"github.com/joho/godotenv"
 )
 
 const keyFile = "/data/peerkey.bin"
@@ -70,20 +72,20 @@ func getenvBool(k string, def bool) bool {
 }
 
 func main() {
+	_ = godotenv.Load(".env")
+	cfg := loadConfig()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// env
-	room := os.Getenv("APP_ROOM")
-	if room == "" {
-		room = "my-room"
-	}
+	// env/config
+	room := firstNonEmpty(os.Getenv("APP_ROOM"), cfg.AppRoom, "my-room")
 	listenTCP := firstNonEmpty(os.Getenv("LISTEN_TCP"), "/ip4/0.0.0.0/tcp/4001")
 	listenQUIC := os.Getenv("LISTEN_QUIC") // e.g. "/ip4/0.0.0.0/udp/4001/quic-v1"
-	relayAddr := os.Getenv("RELAY_ADDR")
-	enableRelayClient := getenvBool("ENABLE_RELAY_CLIENT", true)
-	enableHP := getenvBool("ENABLE_HOLEPUNCH", true)
-	enableUPnP := getenvBool("ENABLE_UPNP", true)
+	relayAddr := firstNonEmpty(os.Getenv("RELAY_ADDR"), cfg.RelayAddr)
+	enableRelayClient := getenvBool("ENABLE_RELAY_CLIENT", cfg.EnableRelayClient)
+	enableHP := getenvBool("ENABLE_HOLEPUNCH", cfg.EnableHolePunch)
+	enableUPnP := getenvBool("ENABLE_UPNP", cfg.EnableUPnP)
 
 	// key & in-memory peerstore
 	priv, err := loadOrCreateKey()
