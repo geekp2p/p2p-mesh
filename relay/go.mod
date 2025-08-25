@@ -2,8 +2,6 @@ module p2p-mesh/relay
 
 go 1.23.8
 
-toolchain go1.24.6
-
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/libp2p/go-libp2p v0.43.0

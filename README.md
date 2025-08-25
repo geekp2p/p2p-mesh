@@ -10,8 +10,8 @@ The system is serverless by design, with optional relay support for guaranteed c
 - ✅ NAT traversal with AutoNAT, UPnP, NAT-PMP, and hole punching (DCUtR)
 - ✅ GossipSub pub/sub messaging between peers
 - ✅ Optional Circuit Relay v2 for guaranteed connectivity
+- ✅ Global peer discovery using Kademlia DHT with optional bootstrap peers
 - ✅ Docker Compose setup for easy multi-node deployment
-
 ## 📦 Quick Start
 
 Clone and run two local nodes in Docker:
@@ -42,6 +42,20 @@ Open the chat web UI for each node in your browser:
 - http://localhost:3002 for `node2`
 
 Enter a nickname when prompted and start chatting. Messages will be broadcast to all peers connected to the mesh.
+
+## 🌍 Bootstrapping & DHT
+
+Nodes can discover each other globally using a Kademlia DHT. Provide one or more
+public bootstrap peers via the `BOOTSTRAP_PEERS` environment variable or the
+`bootstrap_peers` entry in `config.yaml`:
+
+```bash
+export BOOTSTRAP_PEERS=/ip4/<IP>/tcp/<PORT>/p2p/<PEER_ID>,/dns4/example.com/tcp/4001/p2p/<PEER_ID>
+```
+
+Each address should be a full multiaddress including the peer ID. New nodes will
+connect to the bootstrap peers and announce themselves on the DHT so that others
+can find and communicate with them.
 
 ## 🛠 Manual Build
 

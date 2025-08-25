@@ -22,6 +22,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
+	routingdisc "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 	pstoremem "github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
@@ -29,6 +30,8 @@ import (
 	clientv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/client"
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	tcp "github.com/libp2p/go-libp2p/p2p/transport/tcp"
+
+	dht "github.com/libp2p/go-libp2p-kad-dht"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	ma "github.com/multiformats/go-multiaddr"
@@ -86,6 +89,10 @@ func main() {
 	enableRelayClient := getenvBool("ENABLE_RELAY_CLIENT", cfg.EnableRelayClient)
 	enableHP := getenvBool("ENABLE_HOLEPUNCH", cfg.EnableHolePunch)
 	enableUPnP := getenvBool("ENABLE_UPNP", cfg.EnableUPnP)
+	bootstrapPeers := cfg.BootstrapPeers
+	if envPeers := os.Getenv("BOOTSTRAP_PEERS"); envPeers != "" {
+		bootstrapPeers = strings.Split(envPeers, ",")
+	}
 
 	// key & in-memory peerstore
 	priv, err := loadOrCreateKey()
@@ -149,6 +156,52 @@ func main() {
 			fmt.Println("Relay connected.")
 		}
 	}
+
+	// connect to any configured bootstrap peers
+	for _, addr := range bootstrapPeers {
+		a := strings.TrimSpace(addr)
+		if a == "" {
+			continue
+		}
+		maddr, err := ma.NewMultiaddr(a)
+		if err != nil {
+			fmt.Println("Invalid bootstrap addr, skipping:", err)
+			continue
+		}
+		pi, err := peer.AddrInfoFromP2pAddr(maddr)
+		if err != nil {
+			fmt.Println("bootstrap AddrInfo error:", err)
+			continue
+		}
+		h.Peerstore().AddAddrs(pi.ID, pi.Addrs, peerstore.PermanentAddrTTL)
+		if err := h.Connect(ctx, *pi); err != nil {
+			fmt.Println("bootstrap connect failed:", err)
+		} else {
+			fmt.Printf("Bootstrapped to %s\n", short(pi.ID))
+		}
+	}
+
+	// DHT for global peer discovery
+	kdht, err := dht.New(ctx, h)
+	must(err)
+	rdisc := routingdisc.NewRoutingDiscovery(kdht)
+	if _, err := rdisc.Advertise(ctx, "room:"+room); err != nil {
+		fmt.Println("DHT advertise error:", err)
+	}
+	go func() {
+		peerCh, err := rdisc.FindPeers(ctx, "room:"+room)
+		if err != nil {
+			fmt.Println("DHT find peers:", err)
+			return
+		}
+		for p := range peerCh {
+			if p.ID == h.ID() {
+				continue
+			}
+			fmt.Printf("[DHT] found %s\n", short(p.ID))
+			_ = h.Connect(ctx, p)
+		}
+	}()
 
 	// PubSub topic
 	psub, err := pubsub.NewGossipSub(ctx, h)

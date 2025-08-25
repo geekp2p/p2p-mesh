@@ -11,6 +11,8 @@ New-NetFirewallRule -DisplayName "P2P HTTP 3002" -Direction Inbound -Protocol TC
 
 
 
+
+
 Get-NetFirewallRule | findstr P2P
 
 netsh advfirewall reset
@@ -21,3 +23,6 @@ New-NetFirewallRule -DisplayName "Allow RDP 3389" -Direction Inbound -Protocol T
 New-NetFirewallRule -DisplayName "Allow RDP 3389 UDP" -Direction Inbound -Protocol UDP -LocalPort 3389 -Action Allow
 
 Get-NetFirewallRule | findstr RDP
+
+
+New-NetFirewallRule -DisplayName "P2P HTTP 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow

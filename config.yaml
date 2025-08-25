@@ -4,3 +4,4 @@ relay_addr: /ip4/103.13.31.47/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvL
 enable_relay_client: true
 enable_holepunch: true
 enable_upnp: true
+bootstrap_peers: []
