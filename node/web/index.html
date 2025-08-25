@@ -27,7 +27,7 @@
     const div = document.createElement('div');
     div.className = 'msg';
     const when = new Date((ts||Date.now()/1000)*1000).toLocaleString();
-    const shortId = id ? ` (${id.slice(0,8)})` : '';
+    const shortId = id ? ` (${id.slice(-8)})` : '';
     div.innerHTML = `<div class="meta">${from}${shortId} • ${when}</div><div>${text}</div>`;
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
@@ -50,7 +50,7 @@
     fetch('/config').then(r => r.json()).then(cfg => {
       nick.value = cfg.nick || '';
       room.value = cfg.room || '';
-      const idText = cfg.id ? ` • ID: ${cfg.id.slice(0,8)}` : '';
+      const idText = cfg.id ? ` • ID: ${cfg.id.slice(-8)}` : '';
       status.textContent = `Room: ${cfg.room} • Nick: ${cfg.nick}${idText}`;
     }).catch(() => {});
   }

@@ -6,6 +6,7 @@ The system is serverless by design, with optional relay support for guaranteed c
 
 ## ✨ Features
 - ✅ Unique peer IDs for nodes and relays (Ed25519, persisted in volume)
+- ✅ Hardware-derived default nicknames (MAC + CPU ID) to distinguish nodes
 - ✅ LAN discovery using mDNS
 - ✅ NAT traversal with AutoNAT, UPnP, NAT-PMP, and hole punching (DCUtR)
 - ✅ GossipSub pub/sub messaging between peers
@@ -45,7 +46,7 @@ Open the chat web UI for each node in your browser:
 - http://localhost:3001 for `node1`
 - http://localhost:3002 for `node2`
 
-Enter a nickname when prompted and start chatting. Messages will be broadcast to all peers connected to the mesh.
+Enter a nickname when prompted and start chatting. Messages will be broadcast to all peers connected to the mesh. If left blank, a nickname based on the node's MAC address and CPU ID is generated automatically.
 
 ## 🌍 Bootstrapping & DHT
 

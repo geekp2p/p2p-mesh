@@ -2,15 +2,19 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	cpuid "github.com/klauspost/cpuid/v2"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	host "github.com/libp2p/go-libp2p/core/host"
 )
@@ -218,6 +222,21 @@ func (g *Gateway) setRoom(r string) error {
 	return nil
 }
 
+func defaultNick() string {
+	var mac string
+	if ifs, err := net.Interfaces(); err == nil {
+		for _, iface := range ifs {
+			if iface.Flags&net.FlagLoopback == 0 && len(iface.HardwareAddr) > 0 {
+				mac = iface.HardwareAddr.String()
+				break
+			}
+		}
+	}
+	cpu := cpuid.CPU.BrandName
+	sum := sha256.Sum256([]byte(mac + cpu))
+	return hex.EncodeToString(sum[:6])
+}
+
 func RunWebGateway(ctx context.Context, h host.Host, psub *pubsub.PubSub, topic *pubsub.Topic, sub *pubsub.Subscription, room string) {
 	webAddr := os.Getenv("WEB_ADDR")
 	if webAddr == "" {
@@ -225,7 +244,7 @@ func RunWebGateway(ctx context.Context, h host.Host, psub *pubsub.PubSub, topic 
 	}
 	nick := os.Getenv("NODE_NICK")
 	if nick == "" {
-		nick = h.ID().String()[2:8]
+		nick = defaultNick()
 	}
 	gw := NewGateway(h, psub, topic, sub, nick, room)
 	go func() {
