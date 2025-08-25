@@ -7,7 +7,7 @@ services:
       - "4003:4003/tcp"
       - "4003:4003/udp"
     environment:
-      - RELAY_LISTEN=/ip4/0.0.0.0/tcp/4003
+      - RELAY_LISTEN=${RELAY_LISTEN}
       - RELAY_PRIVATE=false
     volumes:
       - relay-data:/data
@@ -24,6 +24,7 @@ services:
       - ENABLE_RELAY_CLIENT=${ENABLE_RELAY_CLIENT}
       - ENABLE_HOLEPUNCH=${ENABLE_HOLEPUNCH}
       - ENABLE_UPNP=${ENABLE_UPNP}
+      - BOOTSTRAP_PEERS=${BOOTSTRAP_PEERS}
       - WEB_ADDR=:3000
       - NODE_NICK=node1
     ports:
@@ -57,6 +58,7 @@ services:
       - ENABLE_RELAY_CLIENT=${ENABLE_RELAY_CLIENT}
       - ENABLE_HOLEPUNCH=${ENABLE_HOLEPUNCH}
       - ENABLE_UPNP=${ENABLE_UPNP}
+      - BOOTSTRAP_PEERS=${BOOTSTRAP_PEERS}
       - WEB_ADDR=:3000
       - NODE_NICK=node2
     ports:

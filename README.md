@@ -19,19 +19,23 @@ Clone and run two local nodes in Docker:
 ```bash
 git clone https://github.com/geekp2p/p2p-mesh.git
 cd p2p-mesh
-docker compose up --build
+cp .env.example .env   # edit APP_ROOM to pick a room name
+docker compose --env-file .env up --build
 ```
+
+All containers read configuration from the `.env` file. Peers that use the
+same `APP_ROOM` value will automatically discover and join each other.
 
 ## 🔌 Enabling Relay Client
 
-Enable the relay client if your nodes must dial through a public relay server. Set the
-`ENABLE_RELAY_CLIENT` flag and provide the relay's multiaddress before starting the
-containers:
+Enable the relay client if your nodes must dial through a public relay server. Set
+`ENABLE_RELAY_CLIENT` and provide the relay's multiaddress in the `.env` file
+before starting the containers:
 
 ```bash
-export ENABLE_RELAY_CLIENT=true
-export RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
-docker compose up --build
+echo "ENABLE_RELAY_CLIENT=true" >> .env
+echo "RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>" >> .env
+docker compose --env-file .env up --build
 ```
 
 ## 💬 Chat
@@ -46,11 +50,11 @@ Enter a nickname when prompted and start chatting. Messages will be broadcast to
 ## 🌍 Bootstrapping & DHT
 
 Nodes can discover each other globally using a Kademlia DHT. Provide one or more
-public bootstrap peers via the `BOOTSTRAP_PEERS` environment variable or the
+public bootstrap peers via the `BOOTSTRAP_PEERS` variable in `.env` or the
 `bootstrap_peers` entry in `config.yaml`:
 
 ```bash
-export BOOTSTRAP_PEERS=/ip4/<IP>/tcp/<PORT>/p2p/<PEER_ID>,/dns4/example.com/tcp/4001/p2p/<PEER_ID>
+echo "BOOTSTRAP_PEERS=/ip4/<IP>/tcp/<PORT>/p2p/<PEER_ID>,/dns4/example.com/tcp/4001/p2p/<PEER_ID>" >> .env
 ```
 
 Each address should be a full multiaddress including the peer ID. New nodes will
