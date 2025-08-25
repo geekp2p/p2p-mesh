@@ -31,12 +31,12 @@ same `APP_ROOM` value will automatically discover and join each other.
 Enable the relay client if your nodes must dial through a public relay server. Set
 `ENABLE_RELAY_CLIENT` and provide the relay's multiaddress in the `.env` file
 before starting the containers:
-␊
-```bash␊
+
+```bash
 echo "ENABLE_RELAY_CLIENT=true" >> .env
 echo "RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>" >> .env
 docker compose --env-file .env up --build
-```␊
+```
 
 ## 💬 Chat
 
@@ -85,6 +85,66 @@ NODE2_ANNOUNCE=/ip4/<PUBLIC_IP>/tcp/4002
 Multiple addresses can be provided comma-separated. Peers will advertise these
 public addresses in addition to their default ones, improving reachability when
 running behind NAT or in Docker.
+
+## 🔧 Example Configurations
+
+Below are sample configurations for nodes behind NAT and nodes with a public IP.
+Replace placeholders such as `<RELAY_PEER_ID>` and `<NODE_PEER_ID>` with actual
+values from your deployment.
+
+### Behind NAT (no public IP)
+
+`.env`
+
+```env
+APP_ROOM=my-room
+RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
+ENABLE_RELAY_CLIENT=true
+ENABLE_HOLEPUNCH=true
+ENABLE_UPNP=true
+BOOTSTRAP_PEERS=/ip4/<NODE_IP>/tcp/4001/p2p/<NODE_PEER_ID>
+```
+
+`config.yaml`
+
+```yaml
+app_room: my-room
+relay_addr: /ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
+enable_relay_client: true
+enable_holepunch: true
+enable_upnp: true
+bootstrap_peers:
+  - /ip4/<NODE_IP>/tcp/4001/p2p/<NODE_PEER_ID>
+```
+
+### With a public IP
+
+`.env`
+
+```env
+APP_ROOM=my-room
+RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
+ENABLE_RELAY_CLIENT=true
+ENABLE_HOLEPUNCH=true
+ENABLE_UPNP=true
+BOOTSTRAP_PEERS=/ip4/<NODE_IP>/tcp/4001/p2p/<NODE_PEER_ID>
+NODE1_ANNOUNCE=/ip4/<YOUR_PUBLIC_IP>/tcp/4001
+RELAY_ANNOUNCE=/ip4/<YOUR_PUBLIC_IP>/tcp/4003
+```
+
+`config.yaml`
+
+```yaml
+app_room: my-room
+relay_addr: /ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>
+enable_relay_client: true
+enable_holepunch: true
+enable_upnp: true
+bootstrap_peers:
+  - /ip4/<NODE_IP>/tcp/4001/p2p/<NODE_PEER_ID>
+announce_addrs:
+  - /ip4/<YOUR_PUBLIC_IP>/tcp/4001
+```
 
 ## 🛠 Manual Build
 
