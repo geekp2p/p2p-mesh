@@ -145,6 +145,40 @@ bootstrap_peers:
 announce_addrs:
   - /ip4/<YOUR_PUBLIC_IP>/tcp/4001
 ```
+### Example: public relay on 103.13.31.47
+
+If your relay runs on host `103.13.31.47` and prints `Relay PeerID: 12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj`, you can use these settings:
+
+`.env`
+```env
+APP_ROOM=my-room
+RELAY_LISTEN=/ip4/0.0.0.0/tcp/4003
+RELAY_ADDR=/ip4/103.13.31.47/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj
+ENABLE_RELAY_CLIENT=true
+ENABLE_HOLEPUNCH=true
+ENABLE_UPNP=true
+BOOTSTRAP_PEERS=/ip4/103.13.31.47/tcp/4001/p2p/<NODE_PEER_ID>
+NODE1_ANNOUNCE=/ip4/103.13.31.47/tcp/4001
+RELAY_ANNOUNCE=/ip4/103.13.31.47/tcp/4003
+```
+
+`<NODE_PEER_ID>` is printed when you start your node; other peers use it as a bootstrap address.
+
+`config.yaml`
+```yaml
+app_room: my-room
+relay_listen: /ip4/0.0.0.0/tcp/4003
+relay_addr: /ip4/103.13.31.47/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj
+enable_relay_client: true
+enable_holepunch: true
+enable_upnp: true
+bootstrap_peers:
+  - /ip4/103.13.31.47/tcp/4001/p2p/<NODE_PEER_ID>
+announce_addrs:
+  - /ip4/103.13.31.47/tcp/4003
+  - /ip4/103.13.31.47/tcp/4001
+```
+
 
 ## 🛠 Manual Build
 
