@@ -184,6 +184,7 @@ func main() {
 	// DHT for global peer discovery
 	kdht, err := dht.New(ctx, h)
 	must(err)
+	must(kdht.Bootstrap(ctx))
 	rdisc := routingdisc.NewRoutingDiscovery(kdht)
 	// advertise our presence and continuously look for peers in the room
 	// so newly joined peers are discovered automatically
@@ -191,19 +192,21 @@ func main() {
 		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
 		for {
-			if _, err := rdisc.Advertise(ctx, "room:"+room); err != nil {
-				fmt.Println("DHT advertise error:", err)
-			}
-			peerCh, err := rdisc.FindPeers(ctx, "room:"+room)
-			if err != nil {
-				fmt.Println("DHT find peers:", err)
-			} else {
-				for p := range peerCh {
-					if p.ID == h.ID() {
-						continue
+			if kdht.RoutingTable().Size() > 0 {
+				if _, err := rdisc.Advertise(ctx, "room:"+room); err != nil {
+					fmt.Println("DHT advertise error:", err)
+				}
+				peerCh, err := rdisc.FindPeers(ctx, "room:"+room)
+				if err != nil {
+					fmt.Println("DHT find peers:", err)
+				} else {
+					for p := range peerCh {
+						if p.ID == h.ID() {
+							continue
+						}
+						fmt.Printf("[DHT] found %s\n", short(p.ID))
+						_ = h.Connect(ctx, p)
 					}
-					fmt.Printf("[DHT] found %s\n", short(p.ID))
-					_ = h.Connect(ctx, p)
 				}
 			}
 			select {

@@ -54,12 +54,14 @@ public bootstrap peers via the `BOOTSTRAP_PEERS` variable in `.env` or the
 `bootstrap_peers` entry in `config.yaml`:
 
 ```bash
-echo "BOOTSTRAP_PEERS=/ip4/<IP>/tcp/<PORT>/p2p/<PEER_ID>,/dns4/example.com/tcp/4001/p2p/<PEER_ID>" >> .env
+echo "BOOTSTRAP_PEERS=/ip4/<NODE_IP>/tcp/4001/p2p/<NODE_PEER_ID>,/dns4/example.com/tcp/4001/p2p/<NODE_PEER_ID>" >> .env
 ```
 
-Each address should be a full multiaddress including the peer ID. New nodes will
-connect to the bootstrap peers and announce themselves on the DHT so that others
-can find and communicate with them.
+Each address must be a full multiaddress **for another node** (not a relay)
+including its peer ID. Nodes will connect to the bootstrap peers and announce
+themselves on the DHT so that others can find and communicate with them. If you
+see `DHT advertise error: failed to find any peer in table`, ensure that at
+least one bootstrap peer is reachable and running the DHT.
 
 ## 🛠 Manual Build
 
