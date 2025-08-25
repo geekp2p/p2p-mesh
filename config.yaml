@@ -5,6 +5,7 @@ enable_relay_client: true
 enable_holepunch: true
 enable_upnp: true
 bootstrap_peers:
-  - /ip4/103.13.31.47/tcp/4001/p2p/<NODE_PEER_ID>
+  - /ip4/103.13.31.47/tcp/4001/p2p/12D3KooWSzw3GFKsp5y8xYe4qrXLts8EAcQFm4TGJzHCzjP8iBNQ
 announce_addrs:
-  - /ip4/103.13.31.47/tcp/4003   # optional public relay address
+  - /ip4/103.13.31.47/tcp/4003
+  - /ip4/103.13.31.47/tcp/4001
