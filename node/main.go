@@ -221,6 +221,9 @@ func main() {
 			fmt.Println("bootstrap AddrInfo error:", err)
 			continue
 		}
+		if pi.ID == h.ID() {
+			continue // skip connecting to ourselves
+		}
 		h.Peerstore().AddAddrs(pi.ID, pi.Addrs, peerstore.PermanentAddrTTL)
 		if err := h.Connect(ctx, *pi); err != nil {
 			fmt.Println("bootstrap connect failed:", err)
@@ -244,6 +247,9 @@ func main() {
 			if err != nil {
 				fmt.Println("fallback AddrInfo error:", err)
 				continue
+			}
+			if pi.ID == h.ID() {
+				continue // skip ourselves from peer DB
 			}
 			h.Peerstore().AddAddrs(pi.ID, pi.Addrs, peerstore.PermanentAddrTTL)
 			if err := h.Connect(ctx, *pi); err != nil {
