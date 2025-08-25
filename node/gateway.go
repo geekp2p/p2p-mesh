@@ -27,7 +27,6 @@ type WSClient struct {
 
 type Gateway struct {
 	h        host.Host
-	ps       *pubsub.PubSub
 	topic    *pubsub.Topic
 	sub      *pubsub.Subscription
 	clients  map[*WSClient]bool
@@ -37,10 +36,11 @@ type Gateway struct {
 	room     string
 }
 
-func NewGateway(h host.Host, ps *pubsub.PubSub, room, nick string) *Gateway {
+func NewGateway(h host.Host, topic *pubsub.Topic, sub *pubsub.Subscription, nick string) *Gateway {
 	return &Gateway{
 		h:       h,
-		ps:      ps,
+		topic:   topic,
+		sub:     sub,
 		clients: make(map[*WSClient]bool),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
@@ -48,20 +48,11 @@ func NewGateway(h host.Host, ps *pubsub.PubSub, room, nick string) *Gateway {
 			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
 		nick: nick,
-		room: room,
+		room: topic.String(),
 	}
 }
 
 func (g *Gateway) Start(ctx context.Context, webAddr string) error {
-	var err error
-	g.topic, err = g.ps.Join(g.room)
-	if err != nil {
-		return err
-	}
-	g.sub, err = g.topic.Subscribe()
-	if err != nil {
-		return err
-	}
 
 	// consume pubsub -> fanout to websockets
 	go func() {
@@ -145,7 +136,7 @@ func (g *Gateway) broadcast(cm ChatMsg) {
 	}
 }
 
-func RunWebGateway(ctx context.Context, h host.Host, ps *pubsub.PubSub, room string) {
+func RunWebGateway(ctx context.Context, h host.Host, topic *pubsub.Topic, sub *pubsub.Subscription) {
 	webAddr := os.Getenv("WEB_ADDR")
 	if webAddr == "" {
 		webAddr = ":3000"
@@ -154,7 +145,7 @@ func RunWebGateway(ctx context.Context, h host.Host, ps *pubsub.PubSub, room str
 	if nick == "" {
 		nick = h.ID().String()[2:8]
 	}
-	gw := NewGateway(h, ps, room, nick)
+	gw := NewGateway(h, topic, sub, nick)
 	go func() {
 		if err := gw.Start(ctx, webAddr); err != nil {
 			log.Println("gateway.Start:", err)

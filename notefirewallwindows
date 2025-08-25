@@ -6,6 +6,11 @@ New-NetFirewallRule -DisplayName "P2P Relay UDP 4003" -Direction Inbound -Protoc
 New-NetFirewallRule -DisplayName "P2P Node TCP 4001" -Direction Inbound -Protocol TCP -LocalPort 4001 -Action Allow
 New-NetFirewallRule -DisplayName "P2P Node UDP 4001" -Direction Inbound -Protocol UDP -LocalPort 4001 -Action Allow
 
+New-NetFirewallRule -DisplayName "P2P HTTP 3001" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow
+New-NetFirewallRule -DisplayName "P2P HTTP 3002" -Direction Inbound -Protocol TCP -LocalPort 3002 -Action Allow
+
+
+
 Get-NetFirewallRule | findstr P2P
 
 netsh advfirewall reset

@@ -158,26 +158,13 @@ func main() {
 	sub, err := topic.Subscribe()
 	must(err)
 
-	RunWebGateway(ctx, h, psub, "room:"+room)
+	RunWebGateway(ctx, h, topic, sub)
 
 	// simple handler: print any direct stream
 	h.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
 		defer s.Close()
 		io.Copy(os.Stdout, s)
 	})
-
-	// subscriber: print any pubsub messages from others
-	go func() {
-		for {
-			msg, err := sub.Next(ctx)
-			if err != nil {
-				return
-			}
-			if msg.ReceivedFrom != h.ID() {
-				fmt.Printf("[pubsub] %s: %s\n", short(msg.ReceivedFrom), string(msg.Data))
-			}
-		}
-	}()
 
 	// publisher: read stdin and publish to the topic
 	go func() {
