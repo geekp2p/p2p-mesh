@@ -185,21 +185,32 @@ func main() {
 	kdht, err := dht.New(ctx, h)
 	must(err)
 	rdisc := routingdisc.NewRoutingDiscovery(kdht)
-	if _, err := rdisc.Advertise(ctx, "room:"+room); err != nil {
-		fmt.Println("DHT advertise error:", err)
-	}
+	// advertise our presence and continuously look for peers in the room
+	// so newly joined peers are discovered automatically
 	go func() {
-		peerCh, err := rdisc.FindPeers(ctx, "room:"+room)
-		if err != nil {
-			fmt.Println("DHT find peers:", err)
-			return
-		}
-		for p := range peerCh {
-			if p.ID == h.ID() {
-				continue
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for {
+			if _, err := rdisc.Advertise(ctx, "room:"+room); err != nil {
+				fmt.Println("DHT advertise error:", err)
 			}
-			fmt.Printf("[DHT] found %s\n", short(p.ID))
-			_ = h.Connect(ctx, p)
+			peerCh, err := rdisc.FindPeers(ctx, "room:"+room)
+			if err != nil {
+				fmt.Println("DHT find peers:", err)
+			} else {
+				for p := range peerCh {
+					if p.ID == h.ID() {
+						continue
+					}
+					fmt.Printf("[DHT] found %s\n", short(p.ID))
+					_ = h.Connect(ctx, p)
+				}
+			}
+			select {
+			case <-ticker.C:
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 
