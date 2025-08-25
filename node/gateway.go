@@ -17,6 +17,7 @@ import (
 
 type ChatMsg struct {
 	From string `json:"from"`
+	ID   string `json:"id"`
 	Text string `json:"text"`
 	Ts   int64  `json:"ts"`
 }
@@ -132,6 +133,7 @@ func (g *Gateway) serveWS(w http.ResponseWriter, r *http.Request) {
 			g.mu.RUnlock()
 			cm := ChatMsg{
 				From: nick,
+				ID:   g.h.ID().String(),
 				Text: string(data),
 				Ts:   time.Now().Unix(),
 			}
@@ -162,7 +164,8 @@ func (g *Gateway) handleConfig(w http.ResponseWriter, r *http.Request) {
 		resp := struct {
 			Nick string `json:"nick"`
 			Room string `json:"room"`
-		}{g.nick, g.room}
+			ID   string `json:"id"`
+		}{g.nick, g.room, g.h.ID().String()}
 		g.mu.RUnlock()
 		_ = json.NewEncoder(w).Encode(resp)
 	case http.MethodPost:
@@ -222,11 +225,7 @@ func RunWebGateway(ctx context.Context, h host.Host, psub *pubsub.PubSub, topic 
 	}
 	nick := os.Getenv("NODE_NICK")
 	if nick == "" {
-		if host, err := os.Hostname(); err == nil && host != "" {
-			nick = host
-		} else {
-			nick = h.ID().String()[2:8]
-		}
+		nick = h.ID().String()[2:8]
 	}
 	gw := NewGateway(h, psub, topic, sub, nick, room)
 	go func() {

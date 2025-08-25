@@ -1,23 +1,3 @@
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>P2P Mesh Chat</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 0; background: #0b1020; color: #e6e6e6; }
-    header { padding: 12px 16px; background: #121a35; position: sticky; top:0; }
-    #controls { margin-top:8px; display:flex; gap:8px; }
-    #controls input { flex: none; width:120px; }
-    #log { padding: 16px; height: calc(100vh - 180px); overflow-y: auto; }
-    .msg { margin: 8px 0; padding: 8px 12px; background: #161f3f; border-radius: 10px; }
-    .meta { font-size: 12px; opacity: .7; margin-bottom: 2px; }
-    footer { position: fixed; bottom: 0; left:0; right:0; background: #121a35; padding: 8px 12px; display:flex; gap:8px; }
-    footer input { flex:1; padding: 10px 12px; border-radius: 8px; border: 1px solid #28345f; background:#0f1530; color:#e6e6e6; }
-    button { padding: 10px 16px; border-radius: 8px; border: 0; background:#3b82f6; color:white; cursor:pointer; }
-    button:disabled{opacity:.6; cursor:not-allowed;}
-  </style>
-</head>
 <body>
   <header>
     <strong>P2P Mesh Chat</strong>
@@ -43,11 +23,12 @@
   const room = document.getElementById('room');
   const apply = document.getElementById('apply');
 
-  function addMsg({from, text, ts}) {
+  function addMsg({from, id, text, ts}) {
     const div = document.createElement('div');
     div.className = 'msg';
     const when = new Date((ts||Date.now()/1000)*1000).toLocaleString();
-    div.innerHTML = `<div class="meta">${from} • ${when}</div><div>${text}</div>`;
+    const shortId = id ? ` (${id.slice(0,8)})` : '';
+    div.innerHTML = `<div class="meta">${from}${shortId} • ${when}</div><div>${text}</div>`;
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
   }
@@ -69,7 +50,8 @@
     fetch('/config').then(r => r.json()).then(cfg => {
       nick.value = cfg.nick || '';
       room.value = cfg.room || '';
-      status.textContent = `Room: ${cfg.room} • Nick: ${cfg.nick}`;
+      const idText = cfg.id ? ` • ID: ${cfg.id.slice(0,8)}` : '';
+      status.textContent = `Room: ${cfg.room} • Nick: ${cfg.nick}${idText}`;
     }).catch(() => {});
   }
   loadConfig();
