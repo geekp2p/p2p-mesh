@@ -34,9 +34,9 @@
   }
 
   let ws;
-  function connect() {␊
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';␊
-    ws = new WebSocket(`${proto}://${location.host}/ws`);␊
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws`);
     ws.onopen = () => { status.textContent = 'Connected'; btn.disabled = false; };
     ws.onclose = () => { status.textContent = 'Disconnected — retrying...'; btn.disabled = true; setTimeout(connect, 1500); };
     ws.onerror = () => { status.textContent = 'Error'; };

@@ -1,9 +1,10 @@
 app_room: my-room
 relay_listen: /ip4/0.0.0.0/tcp/4003
-# relay_addr: /ip4/103.13.31.47/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj
-# Optional relay address(es). Provide one or more comma-separated multiaddrs.
-relay_addr: ""
+relay_addr: /ip4/103.13.31.47/tcp/4003/p2p/12D3KooWCLpgD9xrTETP7Yn6NrueDoqTDquvLN9Gqe1WLoHrAYzj
 enable_relay_client: true
 enable_holepunch: true
 enable_upnp: true
-bootstrap_peers: []
+bootstrap_peers:
+  - /ip4/103.13.31.47/tcp/4001/p2p/<NODE_PEER_ID>
+announce_addrs:
+  - /ip4/103.13.31.47/tcp/4003   # optional public relay address
