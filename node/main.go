@@ -89,9 +89,17 @@ func main() {
 	enableRelayClient := getenvBool("ENABLE_RELAY_CLIENT", cfg.EnableRelayClient)
 	enableHP := getenvBool("ENABLE_HOLEPUNCH", cfg.EnableHolePunch)
 	enableUPnP := getenvBool("ENABLE_UPNP", cfg.EnableUPnP)
+	peerDB := newPeerStore("/data/known_peers.txt")
 	bootstrapPeers := cfg.BootstrapPeers
+	envProvided := false
 	if envPeers := os.Getenv("BOOTSTRAP_PEERS"); envPeers != "" {
 		bootstrapPeers = strings.Split(envPeers, ",")
+		envProvided = true
+	} else if len(bootstrapPeers) > 0 {
+		envProvided = true
+	}
+	if len(bootstrapPeers) == 0 {
+		bootstrapPeers = peerDB.List()
 	}
 	announceAddrs := []ma.Multiaddr{}
 	seeds := cfg.AnnounceAddrs
@@ -153,6 +161,10 @@ func main() {
 	must(err)
 	defer h.Close()
 
+	h.Network().Notify(&network.NotifyBundle{ConnectedF: func(net network.Network, conn network.Conn) {
+		peerDB.Add(conn.RemoteMultiaddr(), conn.RemotePeer())
+	}})
+
 	fmt.Printf("PeerID: %s\n", h.ID().String())
 	for _, a := range h.Addrs() {
 		fmt.Printf("Listen: %s/p2p/%s\n", a, h.ID())
@@ -178,6 +190,7 @@ func main() {
 	}
 
 	// connect to any configured bootstrap peers
+	bootstrapped := false
 	for _, addr := range bootstrapPeers {
 		a := strings.TrimSpace(addr)
 		if a == "" {
@@ -197,7 +210,33 @@ func main() {
 		if err := h.Connect(ctx, *pi); err != nil {
 			fmt.Println("bootstrap connect failed:", err)
 		} else {
+			bootstrapped = true
 			fmt.Printf("Bootstrapped to %s\n", short(pi.ID))
+		}
+	}
+	if !bootstrapped && envProvided {
+		for _, addr := range peerDB.List() {
+			a := strings.TrimSpace(addr)
+			if a == "" {
+				continue
+			}
+			maddr, err := ma.NewMultiaddr(a)
+			if err != nil {
+				fmt.Println("Invalid fallback addr, skipping:", err)
+				continue
+			}
+			pi, err := peer.AddrInfoFromP2pAddr(maddr)
+			if err != nil {
+				fmt.Println("fallback AddrInfo error:", err)
+				continue
+			}
+			h.Peerstore().AddAddrs(pi.ID, pi.Addrs, peerstore.PermanentAddrTTL)
+			if err := h.Connect(ctx, *pi); err != nil {
+				fmt.Println("fallback connect failed:", err)
+			} else {
+				bootstrapped = true
+				fmt.Printf("Bootstrapped to %s\n", short(pi.ID))
+			}
 		}
 	}
 

@@ -63,6 +63,12 @@ themselves on the DHT so that others can find and communicate with them. If you
 see `DHT advertise error: failed to find any peer in table`, ensure that at
 least one bootstrap peer is reachable and running the DHT.
 
+If no bootstrap peers are specified or the provided ones are unreachable, the
+node automatically falls back to any peers recorded in
+`/data/known_peers.txt`. Every successful connection is appended to this file,
+allowing future runs to reuse previously contacted peers as implicit
+bootstrappers.
+
 ## 🌐 Announcing Public Addresses
 
 Containers typically advertise their internal addresses (e.g. `127.0.0.1` or
