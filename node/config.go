@@ -14,6 +14,7 @@ type Config struct {
 	EnableHolePunch   bool     `yaml:"enable_holepunch"`
 	EnableUPnP        bool     `yaml:"enable_upnp"`
 	BootstrapPeers    []string `yaml:"bootstrap_peers"`
+	AnnounceAddrs     []string `yaml:"announce_addrs"`
 }
 
 func loadConfig() Config {

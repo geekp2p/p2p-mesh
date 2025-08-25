@@ -31,12 +31,12 @@ same `APP_ROOM` value will automatically discover and join each other.
 Enable the relay client if your nodes must dial through a public relay server. Set
 `ENABLE_RELAY_CLIENT` and provide the relay's multiaddress in the `.env` file
 before starting the containers:
-
-```bash
+␊
+```bash␊
 echo "ENABLE_RELAY_CLIENT=true" >> .env
 echo "RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>" >> .env
 docker compose --env-file .env up --build
-```
+```␊
 
 ## 💬 Chat
 
@@ -62,6 +62,23 @@ including its peer ID. Nodes will connect to the bootstrap peers and announce
 themselves on the DHT so that others can find and communicate with them. If you
 see `DHT advertise error: failed to find any peer in table`, ensure that at
 least one bootstrap peer is reachable and running the DHT.
+
+## 🌐 Announcing Public Addresses
+
+Containers typically advertise their internal addresses (e.g. `127.0.0.1` or
+`172.x.x.x`). If you want other machines to dial your relay or nodes directly,
+override the announced addresses with the `ANNOUNCE_ADDRS` environment variable.
+The Compose file exposes helper variables so you can set them in `.env`:
+
+```bash
+RELAY_ANNOUNCE=/ip4/<PUBLIC_IP>/tcp/4003
+NODE1_ANNOUNCE=/ip4/<PUBLIC_IP>/tcp/4001
+NODE2_ANNOUNCE=/ip4/<PUBLIC_IP>/tcp/4002
+```
+
+Multiple addresses can be provided comma-separated. Peers will advertise these
+public addresses in addition to their default ones, improving reachability when
+running behind NAT or in Docker.
 
 ## 🛠 Manual Build
 

@@ -93,6 +93,21 @@ func main() {
 	if envPeers := os.Getenv("BOOTSTRAP_PEERS"); envPeers != "" {
 		bootstrapPeers = strings.Split(envPeers, ",")
 	}
+	announceAddrs := []ma.Multiaddr{}
+	seeds := cfg.AnnounceAddrs
+	if env := os.Getenv("ANNOUNCE_ADDRS"); env != "" {
+		seeds = strings.Split(env, ",")
+	}
+	for _, s := range seeds {
+		m, err := ma.NewMultiaddr(strings.TrimSpace(s))
+		if err != nil {
+			if s != "" {
+				fmt.Println("Invalid announce addr, skipping:", err)
+			}
+			continue
+		}
+		announceAddrs = append(announceAddrs, m)
+	}
 
 	// key & in-memory peerstore
 	priv, err := loadOrCreateKey()
@@ -127,6 +142,11 @@ func main() {
 	}
 	if enableHP {
 		opts = append(opts, libp2p.EnableHolePunching())
+	}
+	if len(announceAddrs) > 0 {
+		opts = append(opts, libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
+			return append(addrs, announceAddrs...)
+		}))
 	}
 
 	h, err := libp2p.New(opts...)
@@ -189,7 +209,7 @@ func main() {
 	// advertise our presence and continuously look for peers in the room
 	// so newly joined peers are discovered automatically
 	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
+		ticker := time.NewTicker(15 * time.Second)
 		defer ticker.Stop()
 		for {
 			if kdht.RoutingTable().Size() > 0 {

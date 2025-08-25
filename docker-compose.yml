@@ -9,6 +9,7 @@ services:
     environment:
       - RELAY_LISTEN=${RELAY_LISTEN}
       - RELAY_PRIVATE=false
+      - ANNOUNCE_ADDRS=${RELAY_ANNOUNCE}
     volumes:
       - relay-data:/data
 
@@ -27,6 +28,7 @@ services:
       - BOOTSTRAP_PEERS=${BOOTSTRAP_PEERS}
       - WEB_ADDR=:3000
       - NODE_NICK=node1
+      - ANNOUNCE_ADDRS=${NODE1_ANNOUNCE}
     ports:
       - "4001:4001/tcp"
       - "4001:4001/udp"
@@ -61,6 +63,7 @@ services:
       - BOOTSTRAP_PEERS=${BOOTSTRAP_PEERS}
       - WEB_ADDR=:3000
       - NODE_NICK=node2
+      - ANNOUNCE_ADDRS=${NODE2_ANNOUNCE}
     ports:
       - "4002:4001/tcp"
       - "4002:4001/udp"

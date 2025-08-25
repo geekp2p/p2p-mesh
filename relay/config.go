@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	AppRoom           string `yaml:"app_room"`
-	RelayListen       string `yaml:"relay_listen"`
-	RelayAddr         string `yaml:"relay_addr"`
-	EnableRelayClient bool   `yaml:"enable_relay_client"`
-	EnableHolePunch   bool   `yaml:"enable_holepunch"`
-	EnableUPnP        bool   `yaml:"enable_upnp"`
+	AppRoom           string   `yaml:"app_room"`
+	RelayListen       string   `yaml:"relay_listen"`
+	RelayAddr         string   `yaml:"relay_addr"`
+	EnableRelayClient bool     `yaml:"enable_relay_client"`
+	EnableHolePunch   bool     `yaml:"enable_holepunch"`
+	EnableUPnP        bool     `yaml:"enable_upnp"`
+	AnnounceAddrs     []string `yaml:"announce_addrs"`
 }
 
 func loadConfig() Config {
