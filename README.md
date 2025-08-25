@@ -198,3 +198,10 @@ cd relay
 go build -o p2p-relay .
 ./p2p-relay
 ```
+
+## 🧩 Development Notes
+
+When extending the app, ensure that new protocol IDs (PIDs) and protocol
+names follow GitHub's naming conventions (lowercase and hyphen-separated).
+Consistent naming helps avoid mismatched protocols that can lead to
+bootstrap issues.

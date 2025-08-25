@@ -268,7 +268,10 @@ func main() {
 	}
 
 	// DHT for global peer discovery
-	kdht, err := dht.New(ctx, h, dht.NamespacedValidator("publicip", ipValidator{}))
+	kdht, err := dht.New(ctx, h,
+		dht.ProtocolPrefix("/mesh"),
+		dht.NamespacedValidator("publicip", ipValidator{}),
+	)
 	must(err)
 	must(kdht.Bootstrap(ctx))
 	rdisc := routingdisc.NewRoutingDiscovery(kdht)
