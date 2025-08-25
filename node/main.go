@@ -177,15 +177,30 @@ func main() {
 	ser := mdns.NewMdnsService(h, room, &mdnsNotifee{h: h})
 	defer ser.Close()
 
-	// If relay provided, connect to it; that gives us a control path for DCUtR
+	// If relay provided, connect to it. Multiple addresses can be supplied
+	// comma-separated; we try each until one succeeds.
 	if relayAddr != "" {
-		maddr, err := ma.NewMultiaddr(relayAddr)
-		if err != nil {
-			fmt.Println("Invalid RELAY_ADDR, skipping:", err)
-		} else if err := connectToRelay(ctx, h, maddr); err != nil {
-			fmt.Println("Relay connect failed:", err)
-		} else {
-			fmt.Println("Relay connected.")
+		connected := false
+		for _, addr := range strings.Split(relayAddr, ",") {
+			addr = strings.TrimSpace(addr)
+			if addr == "" {
+				continue
+			}
+			maddr, err := ma.NewMultiaddr(addr)
+			if err != nil {
+				fmt.Println("Invalid RELAY_ADDR, skipping:", err)
+				continue
+			}
+			if err := connectToRelay(ctx, h, maddr); err != nil {
+				fmt.Println("Relay connect failed:", err)
+				continue
+			}
+			fmt.Println("Relay connected via", addr)
+			connected = true
+			break
+		}
+		if !connected {
+			fmt.Println("Relay connection attempts exhausted")
 		}
 	}
 
