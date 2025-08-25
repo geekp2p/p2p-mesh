@@ -32,7 +32,6 @@ import (
 	tcp "github.com/libp2p/go-libp2p/p2p/transport/tcp"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
-	record "github.com/libp2p/go-libp2p-record"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	ma "github.com/multiformats/go-multiaddr"
@@ -269,7 +268,7 @@ func main() {
 	}
 
 	// DHT for global peer discovery
-	kdht, err := dht.New(ctx, h, dht.Validator(record.NamespacedValidator{"publicip": ipValidator{}}))
+	kdht, err := dht.New(ctx, h, dht.NamespacedValidator("publicip", ipValidator{}))
 	must(err)
 	must(kdht.Bootstrap(ctx))
 	rdisc := routingdisc.NewRoutingDiscovery(kdht)
