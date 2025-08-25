@@ -27,7 +27,6 @@ services:
       - ENABLE_UPNP=${ENABLE_UPNP}
       - BOOTSTRAP_PEERS=${BOOTSTRAP_PEERS}
       - WEB_ADDR=:3000
-      - NODE_NICK=node1
       - ANNOUNCE_ADDRS=${NODE1_ANNOUNCE}
     ports:
       - "4001:4001/tcp"
@@ -62,7 +61,6 @@ services:
       - ENABLE_UPNP=${ENABLE_UPNP}
       - BOOTSTRAP_PEERS=${BOOTSTRAP_PEERS}
       - WEB_ADDR=:3000
-      - NODE_NICK=node2
       - ANNOUNCE_ADDRS=${NODE2_ANNOUNCE}
     ports:
       - "4002:4001/tcp"

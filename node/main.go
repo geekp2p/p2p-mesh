@@ -284,7 +284,7 @@ func main() {
 	sub, err := topic.Subscribe()
 	must(err)
 
-	RunWebGateway(ctx, h, topic, sub)
+	RunWebGateway(ctx, h, psub, topic, sub, room)
 
 	// simple handler: print any direct stream
 	h.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
