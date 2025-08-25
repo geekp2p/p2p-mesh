@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,12 +47,11 @@ func (ps *peerStore) Add(addr ma.Multiaddr, id peer.ID) {
 	m := addr.Encapsulate(ma.StringCast("/p2p/" + id.String()))
 	s := m.String()
 	ps.mu.Lock()
+	defer ps.mu.Unlock()
 	if _, ok := ps.set[s]; ok {
-		ps.mu.Unlock()
 		return
 	}
 	ps.set[s] = struct{}{}
-	ps.mu.Unlock()
 	os.MkdirAll(filepath.Dir(ps.path), 0o755)
 	f, err := os.OpenFile(ps.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
@@ -59,4 +59,35 @@ func (ps *peerStore) Add(addr ma.Multiaddr, id peer.ID) {
 	}
 	defer f.Close()
 	_, _ = f.WriteString(s + "\n")
+}
+
+func detectPublicIPs() []string {
+	ips := []string{}
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return ips
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() || !ip.IsGlobalUnicast() || ip.IsPrivate() {
+				continue
+			}
+			ips = append(ips, ip.String())
+		}
+	}
+	return ips
 }

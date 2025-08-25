@@ -90,6 +90,7 @@ func main() {
 	enableHP := getenvBool("ENABLE_HOLEPUNCH", cfg.EnableHolePunch)
 	enableUPnP := getenvBool("ENABLE_UPNP", cfg.EnableUPnP)
 	peerDB := newPeerStore("/data/known_peers.txt")
+	publicIPs := detectPublicIPs()
 	bootstrapPeers := cfg.BootstrapPeers
 	envProvided := false
 	if envPeers := os.Getenv("BOOTSTRAP_PEERS"); envPeers != "" {
@@ -266,6 +267,12 @@ func main() {
 	must(err)
 	must(kdht.Bootstrap(ctx))
 	rdisc := routingdisc.NewRoutingDiscovery(kdht)
+	if len(publicIPs) > 0 {
+		key := "/publicip/" + h.ID().String()
+		if err := kdht.PutValue(ctx, key, []byte(strings.Join(publicIPs, ","))); err != nil {
+			fmt.Println("DHT put public IPs:", err)
+		}
+	}
 	// advertise our presence and continuously look for peers in the room
 	// so newly joined peers are discovered automatically
 	go func() {
