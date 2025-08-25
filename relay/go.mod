@@ -1,6 +1,6 @@
 module p2p-mesh/relay
 
-go 1.23.8
+go 1.23.10
 
 require (
 	github.com/joho/godotenv v1.5.1

@@ -26,3 +26,5 @@ Get-NetFirewallRule | findstr RDP
 
 
 New-NetFirewallRule -DisplayName "P2P HTTP 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow
+
+Test-NetConnection 103.13.31.47 -Port 4003
