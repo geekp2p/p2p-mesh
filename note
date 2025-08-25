@@ -63,3 +63,8 @@ set RELAY_ADDR=/ip4/<PUBLIC_IP_OR_DNS>/tcp/4003/p2p/<RELAY_PEER_ID>
 
 dism /Online /Enable-Feature /FeatureName:Microsoft-Hyper-V /All /NoRestart
 Set-VMProcessor -VMName <ชื่อ VM> -ExposeVirtualizationExtensions $true
+
+✅ cd node && go test ./...
+
+✅ cd ../relay && go test ./...
+

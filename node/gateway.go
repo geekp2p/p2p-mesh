@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -77,8 +78,12 @@ func (g *Gateway) Start(ctx context.Context, webAddr string) error {
 	return http.ListenAndServe(webAddr, nil)
 }
 
+//go:embed web/index.html
+var indexHTML []byte
+
 func (g *Gateway) serveIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "web/index.html")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(indexHTML)
 }
 
 func (g *Gateway) serveWS(w http.ResponseWriter, r *http.Request) {
