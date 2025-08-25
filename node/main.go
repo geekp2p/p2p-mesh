@@ -32,6 +32,7 @@ import (
 	tcp "github.com/libp2p/go-libp2p/p2p/transport/tcp"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	record "github.com/libp2p/go-libp2p-record"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	ma "github.com/multiformats/go-multiaddr"
@@ -65,6 +66,11 @@ func (n *mdnsNotifee) HandlePeerFound(pi peer.AddrInfo) {
 	defer cancel()
 	_ = n.h.Connect(ctx, pi)
 }
+
+type ipValidator struct{}
+
+func (ipValidator) Validate(string, []byte) error        { return nil }
+func (ipValidator) Select(string, [][]byte) (int, error) { return 0, nil }
 
 func getenvBool(k string, def bool) bool {
 	v := strings.TrimSpace(strings.ToLower(os.Getenv(k)))
@@ -263,7 +269,7 @@ func main() {
 	}
 
 	// DHT for global peer discovery
-	kdht, err := dht.New(ctx, h)
+	kdht, err := dht.New(ctx, h, dht.Validator(record.NamespacedValidator{"publicip": ipValidator{}}))
 	must(err)
 	must(kdht.Bootstrap(ctx))
 	rdisc := routingdisc.NewRoutingDiscovery(kdht)
