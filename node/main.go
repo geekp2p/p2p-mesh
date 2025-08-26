@@ -400,6 +400,8 @@ func main() {
 		}
 	}()
 
+	go watchdogPeerConnections(ctx, h, peerDB, bootstrapPeers)
+
 	// wait signal
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
@@ -477,6 +479,56 @@ func reconnectOnDisconnect(ctx context.Context, h host.Host, id peer.ID) {
 			backoff *= 2
 			if backoff > time.Minute {
 				backoff = time.Minute
+			}
+		}
+	}
+}
+
+func watchdogPeerConnections(ctx context.Context, h host.Host, ps *peerStore, bootstrap []string) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+		if len(h.Network().Peers()) > 0 {
+			continue
+		}
+		attempt := func(addr string) bool {
+			addr = strings.TrimSpace(addr)
+			if addr == "" {
+				return false
+			}
+			maddr, err := ma.NewMultiaddr(addr)
+			if err != nil {
+				return false
+			}
+			pi, err := peer.AddrInfoFromP2pAddr(maddr)
+			if err != nil || pi.ID == h.ID() {
+				return false
+			}
+			dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			err = h.Connect(dialCtx, *pi)
+			cancel()
+			if err == nil {
+				fmt.Printf("[watchdog] connected to %s\n", short(pi.ID))
+				return true
+			}
+			return false
+		}
+		for _, addr := range bootstrap {
+			if attempt(addr) {
+				break
+			}
+		}
+		if len(h.Network().Peers()) > 0 {
+			continue
+		}
+		for _, addr := range ps.List() {
+			if attempt(addr) {
+				break
 			}
 		}
 	}
