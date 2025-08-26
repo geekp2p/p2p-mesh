@@ -91,7 +91,22 @@ func main() {
 	room := firstNonEmpty(os.Getenv("APP_ROOM"), cfg.AppRoom, "my-room")
 	listenTCP := firstNonEmpty(os.Getenv("LISTEN_TCP"), "/ip4/0.0.0.0/tcp/4001")
 	listenQUIC := os.Getenv("LISTEN_QUIC") // e.g. "/ip4/0.0.0.0/udp/4001/quic-v1"
-	relayAddr := firstNonEmpty(os.Getenv("RELAY_ADDR"), cfg.RelayAddr)
+	relayAddrStr := firstNonEmpty(os.Getenv("RELAY_ADDR"), cfg.RelayAddr)
+	relayAddrs := []ma.Multiaddr{}
+	if relayAddrStr != "" {
+		for _, addr := range strings.Split(relayAddrStr, ",") {
+			addr = strings.TrimSpace(addr)
+			if addr == "" {
+				continue
+			}
+			maddr, err := ma.NewMultiaddr(addr)
+			if err != nil {
+				fmt.Println("Invalid RELAY_ADDR, skipping:", err)
+				continue
+			}
+			relayAddrs = append(relayAddrs, maddr)
+		}
+	}
 	enableRelayClient := getenvBool("ENABLE_RELAY_CLIENT", cfg.EnableRelayClient)
 	enableHP := getenvBool("ENABLE_HOLEPUNCH", cfg.EnableHolePunch)
 	enableUPnP := getenvBool("ENABLE_UPNP", cfg.EnableUPnP)
@@ -213,31 +228,9 @@ func main() {
 	ser := mdns.NewMdnsService(h, room, &mdnsNotifee{h: h})
 	defer ser.Close()
 
-	// If relay provided, connect to it. Multiple addresses can be supplied
-	// comma-separated; we try each until one succeeds.
-	if relayAddr != "" {
-		connected := false
-		for _, addr := range strings.Split(relayAddr, ",") {
-			addr = strings.TrimSpace(addr)
-			if addr == "" {
-				continue
-			}
-			maddr, err := ma.NewMultiaddr(addr)
-			if err != nil {
-				fmt.Println("Invalid RELAY_ADDR, skipping:", err)
-				continue
-			}
-			if err := connectToRelay(ctx, h, maddr); err != nil {
-				fmt.Println("Relay connect failed:", err)
-				continue
-			}
-			fmt.Println("Relay connected via", addr)
-			connected = true
-			break
-		}
-		if !connected {
-			fmt.Println("Relay connection attempts exhausted")
-		}
+	// Maintain connections to any configured relay addresses.
+	if len(relayAddrs) > 0 {
+		go maintainRelayConnections(ctx, h, relayAddrs)
 	}
 
 	// connect to any configured bootstrap peers
@@ -376,6 +369,40 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	<-sig
+}
+
+func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multiaddr) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		if !isAnyRelayConnected(h, addrs) {
+			for _, maddr := range addrs {
+				if err := connectToRelay(ctx, h, maddr); err == nil {
+					fmt.Println("Relay connected via", maddr.String())
+					break
+				}
+			}
+		}
+		select {
+		case <-ticker.C:
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func isAnyRelayConnected(h host.Host, addrs []ma.Multiaddr) bool {
+	for _, maddr := range addrs {
+		pi, err := peer.AddrInfoFromP2pAddr(maddr)
+		if err != nil {
+			continue
+		}
+		if h.Network().Connectedness(pi.ID) == network.Connected {
+			return true
+		}
+
+	}
+	return false
 }
 
 func connectToRelay(ctx context.Context, h host.Host, maddr ma.Multiaddr) error {

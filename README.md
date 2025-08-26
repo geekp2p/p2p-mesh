@@ -38,6 +38,8 @@ echo "ENABLE_RELAY_CLIENT=true" >> .env
 echo "RELAY_ADDR=/ip4/<RELAY_IP>/tcp/4003/p2p/<RELAY_PEER_ID>" >> .env
 docker compose --env-file .env up --build
 ```
+Multiple relay addresses can be provided comma-separated in `RELAY_ADDR`. The node keeps trying to stay connected and will automatically switch if a relay becomes unavailable.
+
 
 ## 💬 Chat
 
