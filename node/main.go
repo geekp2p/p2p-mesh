@@ -528,15 +528,19 @@ func reconnectOnDisconnect(ctx context.Context, h host.Host, id peer.ID) {
 }
 
 func watchdogPeerConnections(ctx context.Context, h host.Host, ps *peerStore, bootstrap []string) {
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
+	base := 30 * time.Second
+	delay := base
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		case <-timer.C:
 		}
 		if len(h.Network().Peers()) > 0 {
+			delay = base
+			timer.Reset(delay)
 			continue
 		}
 		attempt := func(addr string) bool {
@@ -566,14 +570,24 @@ func watchdogPeerConnections(ctx context.Context, h host.Host, ps *peerStore, bo
 				break
 			}
 		}
-		if len(h.Network().Peers()) > 0 {
-			continue
-		}
-		for _, addr := range ps.List() {
-			if attempt(addr) {
-				break
+		if len(h.Network().Peers()) == 0 {
+			for _, addr := range ps.List() {
+				if attempt(addr) {
+					break
+				}
 			}
 		}
+		if len(h.Network().Peers()) == 0 {
+			if delay < 5*time.Minute {
+				delay *= 2
+				if delay > 5*time.Minute {
+					delay = 5 * time.Minute
+				}
+			}
+		} else {
+			delay = base
+		}
+		timer.Reset(delay)
 	}
 }
 
