@@ -220,9 +220,14 @@ func main() {
 	must(err)
 	defer h.Close()
 
-	h.Network().Notify(&network.NotifyBundle{ConnectedF: func(net network.Network, conn network.Conn) {
-		peerDB.Add(conn.RemoteMultiaddr(), conn.RemotePeer())
-	}})
+	h.Network().Notify(&network.NotifyBundle{
+		ConnectedF: func(net network.Network, conn network.Conn) {
+			peerDB.Add(conn.RemoteMultiaddr(), conn.RemotePeer())
+		},
+		DisconnectedF: func(net network.Network, conn network.Conn) {
+			go reconnectOnDisconnect(ctx, h, conn.RemotePeer())
+		},
+	})
 
 	fmt.Printf("PeerID: %s\n", h.ID().String())
 	for _, a := range h.Addrs() {
@@ -447,6 +452,34 @@ func connectToRelay(ctx context.Context, h host.Host, maddr ma.Multiaddr) error 
 	// Reserve slot (optional; ensures we can use relay/circuit)
 	_, err = clientv2.Reserve(ctx, h, *pi)
 	return err
+}
+
+func reconnectOnDisconnect(ctx context.Context, h host.Host, id peer.ID) {
+	backoff := time.Second
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(backoff):
+		}
+		pi := peer.AddrInfo{ID: id, Addrs: h.Peerstore().Addrs(id)}
+		if len(pi.Addrs) == 0 {
+			continue
+		}
+		dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		if err := h.Connect(dialCtx, pi); err == nil {
+			cancel()
+			fmt.Printf("Reconnected to %s\n", short(id))
+			return
+		}
+		cancel()
+		if backoff < time.Minute {
+			backoff *= 2
+			if backoff > time.Minute {
+				backoff = time.Minute
+			}
+		}
+	}
 }
 
 func must(err error) {
