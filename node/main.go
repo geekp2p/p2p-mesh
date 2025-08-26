@@ -115,6 +115,7 @@ func main() {
 			relayAddrs = append(relayAddrs, maddr)
 		}
 	}
+	relayCh := make(chan ma.Multiaddr, 16)
 	enableRelayClient := getenvBool("ENABLE_RELAY_CLIENT", cfg.EnableRelayClient)
 	enableHP := getenvBool("ENABLE_HOLEPUNCH", cfg.EnableHolePunch)
 	enableUPnP := getenvBool("ENABLE_UPNP", cfg.EnableUPnP)
@@ -243,7 +244,7 @@ func main() {
 
 	// Maintain connections to any configured relay addresses.
 	if len(relayAddrs) > 0 {
-		go maintainRelayConnections(ctx, h, relayAddrs)
+		go maintainRelayConnections(ctx, h, relayAddrs, relayCh)
 	}
 
 	// connect to any configured bootstrap peers
@@ -378,6 +379,12 @@ func main() {
 	sub, err := topic.Subscribe()
 	must(err)
 
+	relayTopic, err := psub.Join("relays")
+	must(err)
+	relaySub, err := relayTopic.Subscribe()
+	must(err)
+	go relayAnnounce(ctx, h, relayTopic, relaySub, relayCh)
+
 	RunWebGateway(ctx, h, psub, topic, sub, room)
 
 	// simple handler: print any direct stream
@@ -408,7 +415,7 @@ func main() {
 	<-sig
 }
 
-func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multiaddr) {
+func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multiaddr, announce chan<- ma.Multiaddr) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -416,6 +423,12 @@ func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multi
 			for _, maddr := range addrs {
 				if err := connectToRelay(ctx, h, maddr); err == nil {
 					fmt.Println("Relay connected via", maddr.String())
+					if announce != nil {
+						select {
+						case announce <- maddr:
+						default:
+						}
+					}
 					break
 				}
 			}
@@ -424,6 +437,36 @@ func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multi
 		case <-ticker.C:
 		case <-ctx.Done():
 			return
+		}
+	}
+}
+
+func relayAnnounce(ctx context.Context, h host.Host, topic *pubsub.Topic, sub *pubsub.Subscription, in <-chan ma.Multiaddr) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case maddr := <-in:
+				_ = topic.Publish(ctx, []byte(maddr.String()))
+			}
+		}
+	}()
+	for {
+		msg, err := sub.Next(ctx)
+		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+			continue
+		}
+		addrStr := strings.TrimSpace(string(msg.Data))
+		maddr, err := ma.NewMultiaddr(addrStr)
+		if err != nil {
+			continue
+		}
+		if err := connectToRelay(ctx, h, maddr); err == nil {
+			fmt.Println("Relay connected via announcement", maddr.String())
 		}
 	}
 }
