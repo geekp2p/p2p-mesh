@@ -37,10 +37,18 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	ma "github.com/multiformats/go-multiaddr"
 
+	cid "github.com/ipfs/go-cid"
+	mh "github.com/multiformats/go-multihash"
+
 	"github.com/joho/godotenv"
 )
 
 const keyFile = "/data/peerkey.bin"
+
+var bootstrapCID = func() cid.Cid {
+	h, _ := mh.Sum([]byte("mesh-bootstrap"), mh.SHA2_256, -1)
+	return cid.NewCidV1(cid.Raw, h)
+}()
 
 func loadOrCreateKey() (crypto.PrivKey, error) {
 	_ = os.MkdirAll(filepath.Dir(keyFile), 0o755)
@@ -304,13 +312,35 @@ func main() {
 			fmt.Println("DHT put public IPs:", err)
 		}
 	}
-	// advertise our presence and continuously look for peers in the room
-	// so newly joined peers are discovered automatically
+	if len(publicIPs) > 0 || len(announceAddrs) > 0 {
+		go func() {
+			ticker := time.NewTicker(10 * time.Minute)
+			defer ticker.Stop()
+			for {
+				if err := kdht.Provide(ctx, bootstrapCID, true); err != nil {
+					fmt.Println("DHT provide bootstrap:", err)
+				}
+				select {
+				case <-ticker.C:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
 	go func() {
 		ticker := time.NewTicker(15 * time.Second)
 		defer ticker.Stop()
 		for {
 			if kdht.RoutingTable().Size() > 0 {
+				provCh := kdht.FindProvidersAsync(ctx, bootstrapCID, 20)
+				for p := range provCh {
+					if p.ID == h.ID() {
+						continue
+					}
+					fmt.Printf("[DHT bootstrap] found %s\n", short(p.ID))
+					_ = h.Connect(ctx, p)
+				}
 				if _, err := rdisc.Advertise(ctx, "room:"+room); err != nil {
 					fmt.Println("DHT advertise error:", err)
 				}
