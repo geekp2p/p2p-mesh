@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -121,6 +122,35 @@ func main() {
 			continue
 		}
 		announceAddrs = append(announceAddrs, m)
+	}
+
+	// automatically announce detected public IPs using the listen ports
+	var tcpPort, udpPort string
+	if listenTCP != "" {
+		if m, err := ma.NewMultiaddr(listenTCP); err == nil {
+			tcpPort, _ = m.ValueForProtocol(ma.P_TCP)
+		}
+	}
+	if listenQUIC != "" {
+		if m, err := ma.NewMultiaddr(listenQUIC); err == nil {
+			udpPort, _ = m.ValueForProtocol(ma.P_UDP)
+		}
+	}
+	for _, ip := range publicIPs {
+		ipType := "ip4"
+		if parsed := net.ParseIP(ip); parsed != nil && parsed.To4() == nil {
+			ipType = "ip6"
+		}
+		if tcpPort != "" {
+			if m, err := ma.NewMultiaddr(fmt.Sprintf("/%s/%s/tcp/%s", ipType, ip, tcpPort)); err == nil {
+				announceAddrs = append(announceAddrs, m)
+			}
+		}
+		if udpPort != "" {
+			if m, err := ma.NewMultiaddr(fmt.Sprintf("/%s/%s/udp/%s/quic-v1", ipType, ip, udpPort)); err == nil {
+				announceAddrs = append(announceAddrs, m)
+			}
+		}
 	}
 
 	// key & in-memory peerstore
