@@ -244,7 +244,7 @@ func main() {
 
 	// Maintain connections to any configured relay addresses.
 	if len(relayAddrs) > 0 {
-		go maintainRelayConnections(ctx, h, relayAddrs, relayCh)
+		go maintainRelayConnections(ctx, h, relayAddrs, peerDB, relayCh)
 	}
 
 	// connect to any configured bootstrap peers
@@ -415,11 +415,12 @@ func main() {
 	<-sig
 }
 
-func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multiaddr, announce chan<- ma.Multiaddr) {
+func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multiaddr, ps *peerStore, announce chan<- ma.Multiaddr) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 	for {
 		if !isAnyRelayConnected(h, addrs) {
+			connected := false
 			for _, maddr := range addrs {
 				if err := connectToRelay(ctx, h, maddr); err == nil {
 					fmt.Println("Relay connected via", maddr.String())
@@ -429,7 +430,27 @@ func maintainRelayConnections(ctx context.Context, h host.Host, addrs []ma.Multi
 						default:
 						}
 					}
+					connected = true
 					break
+				}
+			}
+			if !connected {
+				for _, addr := range ps.List() {
+					maddr, err := ma.NewMultiaddr(addr)
+					if err != nil {
+						continue
+					}
+					if err := connectToRelay(ctx, h, maddr); err == nil {
+						fmt.Println("Relay fallback via", maddr.String())
+						addrs = append(addrs, maddr)
+						if announce != nil {
+							select {
+							case announce <- maddr:
+							default:
+							}
+						}
+						break
+					}
 				}
 			}
 		}

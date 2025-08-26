@@ -72,6 +72,32 @@ node automatically falls back to any peers recorded in
 allowing future runs to reuse previously contacted peers as implicit
 bootstrappers.
 
+## 🔄 Auto-Relay Fallback & Peer Persistence
+
+Every node saves the multiaddresses of connected peers to `/data/known_peers.txt`.
+The list is reused on startup for bootstrapping and also as a relay fallback.
+When `ENABLE_RELAY_CLIENT=true` and none of the configured relays are reachable,
+the node will iterate through the stored addresses and attempt to reserve a
+relay slot with any reachable public peer. This lets private nodes recover
+connectivity through whichever public node comes back online.
+
+```bash
+# First run with a known public relay
+ENABLE_RELAY_CLIENT=true
+RELAY_ADDR=/ip4/1.2.3.4/tcp/4003/p2p/<RELAY_PEER_ID>
+
+# Subsequent runs can fall back to stored peers even if RELAY_ADDR is empty
+ENABLE_RELAY_CLIENT=true
+RELAY_ADDR=
+```
+
+Remove `/data/known_peers.txt` to clear remembered peers.
+
+Nodes with public reachability (detected automatically or via `ANNOUNCE_ADDRS`)
+also publish themselves on the DHT as bootstrap providers. All peers
+periodically query the DHT for these providers and try to connect, enabling the
+mesh to learn about new public nodes without manual configuration.
+
 ## 🌐 Announcing Public Addresses
 
 Containers typically advertise their internal addresses (e.g. `127.0.0.1` or
